@@ -6,9 +6,7 @@ async function evaluateCreditRisk(applicationData) {
     throw new Error("Application data is required");
   }
 
-  // ---------------------------------------------
   // 1. Rule-based factor evaluation
-  // ---------------------------------------------
   const ruleResult = await evaluateEntity(applicationData);
 
   // ---------------------------------------------
