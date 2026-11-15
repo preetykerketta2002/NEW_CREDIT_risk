@@ -1,5 +1,8 @@
 fastapi==0.133.1
 joblib==1.5.3
 pandas==3.0.1
-scikit-learn==1.8.0
+scikit-learn==1.9.1
 uvicorn==0.41.0
+SQLAlchemy==2.0.48
+PyMySQL==1.1.2
+python-dotenv==1.1.1

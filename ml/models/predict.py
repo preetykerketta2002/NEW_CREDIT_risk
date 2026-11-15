@@ -29,7 +29,7 @@ MODEL_PATH = os.path.join(
 
 DATABASE_URL = (
     "mysql+pymysql://root:root"
-    "@localhost:3306/credit_risk_evaluator"
+    "@localhost:3306/credit"
 )
 
 engine = create_engine(DATABASE_URL)

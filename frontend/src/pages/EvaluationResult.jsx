@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { evaluateEntity, getEntities } from '../services/api';
 
-export default function EvaluationResult() {
+export default function EvaluationResult({ onSaveSearch }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -23,6 +23,7 @@ export default function EvaluationResult() {
         }
 
         setEntity(found);
+        onSaveSearch?.(found.entity_name || found.entity_id);
         const result = await evaluateEntity(found);
         setEvaluation(result);
       } catch (err) {
@@ -32,7 +33,7 @@ export default function EvaluationResult() {
       }
     }
     loadAndEvaluate();
-  }, [id, navigate]);
+  }, [id, navigate, onSaveSearch]);
 
   if (loading) {
     return (
@@ -63,7 +64,7 @@ export default function EvaluationResult() {
 
   return (
     <div className="dashboard-container">
-      <button className="back-btn" onClick={() => navigate('/')}>
+      <button className="back-btn" onClick={() => navigate('/borrowers')}>
         ← Back to Dashboard
       </button>
 

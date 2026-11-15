@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 from sqlalchemy import create_engine
-from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import mutual_info_classif
 
@@ -15,7 +14,7 @@ DB_USER = "root"
 DB_PASSWORD = "root"
 DB_HOST = "localhost"
 DB_PORT = 3306
-DB_NAME = "credit_risk_evaluator"
+DB_NAME = "credit"
 
 DATABASE_URL = (
     f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}"
@@ -144,8 +143,7 @@ print("NUMERICAL CORRELATION WITH TARGET")
 print("====================================")
 
 # Encode target only for correlation analysis.
-target_encoder = LabelEncoder()
-y_encoded = target_encoder.fit_transform(y)
+y_encoded, _ = pd.factorize(y)
 
 correlation_data = X[NUMERICAL_FEATURES].copy()
 
@@ -178,11 +176,9 @@ for column in NUMERICAL_FEATURES:
 for column in CATEGORICAL_FEATURES:
     X_mi[column] = X_mi[column].fillna("Missing")
 
-    encoder = LabelEncoder()
-
-    X_mi[column] = encoder.fit_transform(
+    X_mi[column] = pd.factorize(
         X_mi[column].astype(str)
-    )
+    )[0]
 
 
 # ============================================================

@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+.venv/
 **/.env
 **/.env.*
 !.env.example

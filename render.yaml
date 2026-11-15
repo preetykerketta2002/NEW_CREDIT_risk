@@ -12,21 +12,13 @@ services:
       sizeGB: 10
     envVars:
       - key: MYSQL_DATABASE
-        value: credit_risk_evaluator
+        value: credit
       - key: MYSQL_USER
         value: credit_risk_app
       - key: MYSQL_PASSWORD
         generateValue: true
       - key: MYSQL_ROOT_PASSWORD
         generateValue: true
-
-  - type: pserv
-    name: credit-risk-ml
-    runtime: docker
-    plan: 0.5c-512mb
-    region: singapore
-    dockerfilePath: ./deploy/ml/Dockerfile
-    dockerContext: .
 
   - type: web
     name: credit-risk-app
@@ -35,8 +27,8 @@ services:
     region: singapore
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /
-    initialDeployHook: node scripts/sync.js && node scripts/importCsv.js
+    healthCheckPath: /health
+    initialDeployHook: python -m backend.initialize
     envVars:
       - key: DB_HOST
         fromService:
@@ -46,7 +38,7 @@ services:
       - key: DB_PORT
         value: "3306"
       - key: DB_NAME
-        value: credit_risk_evaluator
+        value: credit
       - key: DB_USER
         value: credit_risk_app
       - key: DB_PASS
@@ -54,5 +46,3 @@ services:
           type: pserv
           name: credit-risk-mysql
           envVarKey: MYSQL_PASSWORD
-      - key: ML_API_URL
-        value: http://credit-risk-ml:8000/predict
