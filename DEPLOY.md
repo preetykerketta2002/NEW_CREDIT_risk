@@ -18,6 +18,19 @@ The first deploy runs `python -m backend.initialize`. It creates missing tables 
 - Passwords are stored as salted PBKDF2 hashes. Sign-in uses an HTTP-only session cookie, and user search history is stored separately per account.
 - Set any database credentials only in Render's environment settings. Never commit `.env` files.
 
+## Vercel frontend with a local FastAPI backend through ngrok
+
+Vercel hosts only the frontend in this setup. The FastAPI service and MySQL database must remain running on your computer, and the API is publicly reachable while the ngrok tunnel is active.
+
+1. In Vercel, set the root directory to `frontend`, the framework to Vite, the build command to `npm run build`, and the output directory to `dist` (`npm ci` is the install command).
+2. Add the Vercel environment variable `VITE_API_BASE_URL` with the HTTPS URL of your ngrok API, for example `https://violet-greeter-size.ngrok-free.dev`. Don't add `/api` to this value.
+3. After the first Vercel deploy, copy its exact production origin (for example, `https://your-project.vercel.app`) into `FRONTEND_ORIGINS` in `backend/.env`. Include any other exact origins you use, separated by commas.
+4. Add `SESSION_COOKIE_SAMESITE=none` and `SESSION_COOKIE_SECURE=true` to `backend/.env` so the browser can send the sign-in cookie from the Vercel site to the ngrok API. These settings are also shown in `backend/.env.example`.
+5. From the repository root, start FastAPI with `py -3.11 -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000`, then start the tunnel in another terminal with `ngrok http 8000`.
+6. Restart FastAPI after changing `.env`. If the ngrok URL changes, update `VITE_API_BASE_URL` in Vercel and redeploy the frontend.
+
+The API only allows browser origins listed in `FRONTEND_ORIGINS`. Keep this list limited to your own frontend domains. The borrower portfolio is shared by all registered accounts, so use sample data while exposing the development backend publicly.
+
 ## Local container build
 
 From the repository root, build the app image with `docker build -t credit-risk-app .`. Node is used only in the build stage to compile the React frontend; the running application image and API use Python/FastAPI. MySQL uses `deploy/mysql/Dockerfile`.

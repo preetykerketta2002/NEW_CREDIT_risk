@@ -1,7 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || ''}/api`;
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const API_BASE_URL = `${API_ORIGIN}/api`;
 axios.defaults.withCredentials = true;
+if (API_ORIGIN.includes('ngrok')) {
+  // Free ngrok endpoints show a browser warning unless API requests opt out.
+  axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true';
+}
 
 export const getCurrentUser = async () => {
   const response = await axios.get(`${API_BASE_URL}/auth/me`);

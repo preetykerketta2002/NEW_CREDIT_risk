@@ -12,6 +12,7 @@ import joblib
 import pandas as pd
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -73,6 +74,21 @@ def database_url() -> str | URL:
 
 engine = create_engine(database_url(), pool_pre_ping=True, pool_recycle=1800)
 app = FastAPI(title="Credit Risk API", description="Credit risk evaluation and prediction API", version="2.0.0")
+allowed_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv(
+        "FRONTEND_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000",
+    ).split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "ngrok-skip-browser-warning"],
+)
 
 
 def ensure_search_history_table(connection, user_id: int | None = None):
@@ -165,11 +181,22 @@ def new_session(connection, user_id: int) -> tuple[str, datetime]:
     return token, expires_at
 
 
+def session_cookie_options(request: Request) -> dict[str, Any]:
+    same_site = os.getenv("SESSION_COOKIE_SAMESITE", "strict").strip().lower()
+    if same_site not in {"strict", "lax", "none"}:
+        raise RuntimeError("SESSION_COOKIE_SAMESITE must be strict, lax, or none")
+    secure_setting = os.getenv("SESSION_COOKIE_SECURE")
+    secure = request.url.scheme == "https" if secure_setting is None else secure_setting.strip().lower() in {"1", "true", "yes"}
+    if same_site == "none" and not secure:
+        raise RuntimeError("SESSION_COOKIE_SECURE must be true when SESSION_COOKIE_SAMESITE=none")
+    return {"httponly": True, "secure": secure, "samesite": same_site, "path": "/"}
+
+
 def set_session_cookie(response: Response, request: Request, token: str, expires_at: datetime):
     max_age = max(0, int((expires_at - datetime.now(timezone.utc).replace(tzinfo=None)).total_seconds()))
     response.set_cookie(
         key="credence_session", value=token, max_age=max_age,
-        httponly=True, secure=request.url.scheme == "https", samesite="strict", path="/",
+        **session_cookie_options(request),
     )
 
 
@@ -323,7 +350,7 @@ def logout_user(request: Request, response: Response):
                              {"token_hash": token_digest(token)})
         except SQLAlchemyError as exc:
             raise HTTPException(status_code=500, detail="Unable to sign out") from exc
-    response.delete_cookie("credence_session", httponly=True, secure=request.url.scheme == "https", samesite="strict", path="/")
+    response.delete_cookie("credence_session", **session_cookie_options(request))
     return {"logged_out": True}
 
 
