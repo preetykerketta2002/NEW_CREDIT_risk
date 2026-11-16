@@ -75,12 +75,9 @@ def database_url() -> str | URL:
 engine = create_engine(database_url(), pool_pre_ping=True, pool_recycle=1800)
 app = FastAPI(title="Credit Risk API", description="Credit risk evaluation and prediction API", version="2.0.0")
 allowed_origins = [
-    origin.strip().rstrip("/")
-    for origin in os.getenv(
-        "FRONTEND_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000",
-    ).split(",")
-    if origin.strip()
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://frontend-iota-ten-43.vercel.app",
 ]
 app.add_middleware(
     CORSMiddleware,
